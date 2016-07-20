@@ -1,5 +1,21 @@
 define(["models/order"],function(order){
+    var tools = {
 
+        view: "form",
+        css: "toolbar",
+
+        cols:[
+        {
+            view: "label", label: "Export"
+        },
+        {
+            view: "button", label: "All Fields", width: 95, click:function(){
+            webix.toExcel($$("orders"));
+        }
+        }
+    ]
+
+    };
     var grid = {
         view: "datatable", id: "orders",  select: true, editable:true,
         columns: [
@@ -10,8 +26,9 @@ define(["models/order"],function(order){
             {id: "fee", header: "Fee", width: 220, sort:"string"},
             {id: "shipping", header: "Date of order", width: 220, sort:"string"},
             {id: "date", header: "Date of order", width: 220, sort:"string"},
-            {id: "image", header: "Image", width: 200, sort:"string"},
-            {id: "delete", header: "Delete", width: 100,  src:"/deleteImage.png"}
+            {id: "image", header: "Image", width: 220, sort:"string"},
+            {id: "delete", header: "", width: 50, template:"<span class='webix_icon fa-trash-o'></span>"}
+
         ],
         on: {
             "onItemClick": function(id, e, trg) {
@@ -53,15 +70,25 @@ define(["models/order"],function(order){
                         ]
                     }
                 }).show();
+            },
+            "data->onStoreUpdated":function(){
+                this.data.each(function(obj, i){
+                    obj.index = i+1;
+                })
             }
         }
     };
 
-
+    var ui = {
+        rows: [
+            tools,
+            grid
+        ]
+    };
     return {
-        $ui: grid,
+        $ui: ui,
         $oninit:function(view){
-            view.parse(order.data);
+            $$('orders').parse(order.data);
         }
     };
 
