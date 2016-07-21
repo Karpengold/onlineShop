@@ -35,41 +35,25 @@ define(["models/order"],function(order){
                 if (id.column == "delete") {
                     var salesperson = $$('orders').getItem(id).salesperson;
                     webix.ajax().del("http://localhost:8080/orders?" + salesperson , null, function (text, xml, xhr) {
-                        webix.message("Delete row: " + id);
-                        $$("orders").remove(id);
-                        console.log(text);
+                        if(text) {
+                            webix.message("Delete row: " + id);
+                            $$("orders").remove(id);
+                            console.log(text);
+                        }
+                        else {
+                            webix.error("Error");
+                        }
                     });
                     return false;
                 }
             },
             "onItemDblClick": function () {
-                if ($$('orderWin') != null)
-                    $$('orderWin').close();
-                webix.ui({
-                    view: "window",
-                    id: "orderWin",
-                    head: "Edit order",
-                    position: "center",
+                if (!editOrderWin.isVisible())
+                    editOrderWin.show();
+                else {
+                    editOrderWin.hide();
+                }
 
-                    on: {
-                        "onShow": function () {
-                            $$("editOrder").bind("orders");
-                        }
-                    },
-                    body: {
-                        view: "form", id: "editOrder", scroll: false,
-                        elements: [
-                            {view: "text", name: "salesperson", label: "Salesperson"},
-                            {view: "text", name: "customer", label: "Customer"},
-                            {view: "text", name: "status", label: "Status of order"},
-                            {view: "text", name: "fee", label: "Fee"},
-                            {view: "text", name: "date", label: "Date"},
-                            {view: "text", name: "shipping", label: "Shipping"},
-                            {view: "button", value: "Cancel", click: '$$("orderWin").close()'},
-                            {view: "button", value: "Save", click: saveOrder}
-                        ]
-                    }
-                }).show();
             },
             "data->onStoreUpdated":function(){
                 this.data.each(function(obj, i){
@@ -98,8 +82,37 @@ function saveOrder() {
     var formValues = $$('editOrder').getValues();
     webix.ajax().headers({
         "Content-type":"application/json"
-    }).put("http://localhost:8080/orders",JSON.stringify(formValues), function(){
-        $$("editOrder").save();
-        $$("orderWin").close();
+    }).put("http://localhost:8080/orders",JSON.stringify(formValues), function(response){
+        if(response.server) {
+            $$("editOrder").save();
+            $$("orderWin").hide();
+        }
+        else
+            webix.error("Error");
     });
 }
+var editOrderWin = webix.ui({
+    view: "window",
+    id: "orderWin",
+    head: "Edit order",
+    position: "center",
+
+    on: {
+        "onShow": function () {
+            $$("editOrder").bind("orders");
+        }
+    },
+    body: {
+        view: "form", id: "editOrder", scroll: false,
+        elements: [
+            {view: "text", name: "salesperson", label: "Salesperson"},
+            {view: "text", name: "customer", label: "Customer"},
+            {view: "text", name: "status", label: "Status of order"},
+            {view: "text", name: "fee", label: "Fee"},
+            {view: "text", name: "date", label: "Date"},
+            {view: "text", name: "shipping", label: "Shipping"},
+            {view: "button", value: "Cancel", click: '$$("orderWin").hide()'},
+            {view: "button", value: "Save", click: saveOrder}
+        ]
+    }
+});

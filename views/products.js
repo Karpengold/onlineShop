@@ -1,8 +1,9 @@
 define([
     "models/records"
 ],function(records){
+    var clicks =0;
 
-    var grid = {
+    var table = {
             view: "datatable", id: "datatable1",
             columns: [
                 {id:"index",   header:"",           sort:"int"},
@@ -19,48 +20,22 @@ define([
             autowidth: true,
             on: {
                 "onItemClick": function (id, e, trg) {
-                    if ($$('my_win') != null)
-                        $$('my_win').close();
+                    clicks++;
 
-                    if (id.column == "DELETE") {
-                        var code = $$('datatable1').getItem(id).CODE;
-                        webix.ajax().del("http://localhost:8080/products?" + code, null, function (text, xml, xhr) {
-                            if(text) {
-                                webix.message("Delete row: " + id);
-                                $$("datatable1").remove(id);
-                            }
-                            else {
-                                webix.error("Error");
-                            }
+                    setTimeout(function(){
 
-                        });
-                        return false;
-                    }
+                        if(clicks == 2){
+                            //doubleClickEdit();
+                            alert("doubleClickEdit");
 
-
-                    webix.ui({
-                        view: "window",
-                        id: "my_win",
-                        head: "Edit product",
-                        position: "center",
-
-                        on: {
-                            "onShow": function () {
-                                $$("form1").bind("datatable1");
-                            }
-                        },
-                        body: {
-                            view: "form", id: "form1", scroll: false,
-                            elements: [
-                                {view: "text", name: "CODE", label: "Code"},
-                                {view: "text", name: "NAME", label: "Name"},
-                                {view: "text", name: "PRICE", label: "Price"},
-                                {view: "text", name: "CATEGORY", label: "Category"},
-                                {view: "button", value: "Cancel", click: '$$("my_win").close()'},
-                                {view: "button", value: "Save", click: saveHandler}
-                            ]
                         }
-                    }).show();
+                        if(clicks == 1){
+                            singleClickEdit(id);
+                        }
+
+                        clicks = 0;
+                    },400);
+
 
                 },
                 "data->onStoreUpdated":function(){
@@ -79,15 +54,12 @@ define([
 
     ]};
 
-
     var ui = {
         rows: [
             toolbar,
-            grid
+            table
         ]
     };
-
-
 
     return {
         $ui: ui,
@@ -106,7 +78,7 @@ function saveHandler() {
     }).put("http://localhost:8080/products",JSON.stringify(formValues),{
         success:function(){
             $$("form1").save();
-            $$("my_win").close();
+            $$("editWin").close();
         },
         error:function(){
             webix.message("Error");
@@ -114,28 +86,12 @@ function saveHandler() {
     });
 }
 function userInfo(){
-    if($$("userInfo")!=null){
-        $$("userInfo").close();
-        return;
+    if(!userInfoWin.isVisible()){
+        userInfoWin.show();
     }
-    webix.ui({
-        view: "window",
-        id: "userInfo",
-        head: "Account settings",
-        position: "center",
-
-        body: {
-            view: "form", id: "form2", scroll: false,
-            elements: [
-                {view: "text", name: "name", label: "Name"},
-                {view: "text", name: "surname", label: "Surname"},
-                {view: "text", name: "phone", label: "Phone"},
-                {view: "text", name: "email", label: "Email"},
-                {view: "button", value: "Cancel", click: '$$("userInfo").close()'},
-                {view: "button", value: "Save", click: saveUserInfo}
-            ]
-        }
-    }).show();
+    else {
+        userInfoWin.hide();
+    }
 }
 function saveUserInfo() {
     var formValues = $$("form2").getValues();
@@ -155,58 +111,12 @@ function saveUserInfo() {
 
 }
 function addProduct() {
-    if($$("addProduct")!=null){
-        $$("addProduct").close();
-        return;
+    if(!addProductWin.isVisible()){
+        addProductWin.show();
     }
-    webix.ui({
-        view: "window",
-        id: "addProduct",
-        head: "Add new product",
-        position: "center",
-        width:500,
-        type:"space",
-        body: {
-            rows: [
-                {
-                    cols: [
-                        {
-                            view: "form", id: "form3", scroll: false,
-                            elements: [
-
-                                {view: "text",      name:  "CODE",     label: "Code"},
-                                {view: "text",      name:  "CATEGORY", label: "Category"},
-                                {view: "text",      name:  "NAME",     label: "Name"},
-                                {view: "text",      name:  "PRICE",    label: "Price"},
-                                {view: "text",      name:  "QUANTITY", label: "Quantity"},
-                                {view: "checkbox",  name:  "STATUS",   label: "Published", value:1},
-                                {
-                                    view:"uploader", upload:"http://localhost:8080/products",
-                                    id:"files", name:"files",
-                                    value:"Add image",
-                                    link:"doclist",
-                                    accept: "image/png, image/gif, image/jpg",
-                                    autosend:false
-
-                                },
-                                {
-                                    view:"list", scroll:false, id:"doclist",
-                                    type:"uploader", autoheight:true, borderless:true
-                                }
-                            ]
-                        }
-
-                    ]
-                },
-
-
-                {view: "button", value: "Cancel", click: '$$("addProduct").close()'},
-                {view: "button", value: "Save", click: saveProduct}
-            ]
-        }
-
-    }).show();
-
+    else {
+        addProductWin.hide();
+    }
 }
 function saveProduct(){
 
@@ -222,7 +132,115 @@ function saveProduct(){
     },
         formValues
     );
+}
 
+function singleClickEdit(id){
+    if (id.column == "DELETE") {
+        var code = $$('datatable1').getItem(id).CODE;
+        webix.ajax().del("http://localhost:8080/products?" + code, null, function (text, xml, xhr) {
+            if(text) {
+                webix.message("Delete row: " + id);
+                $$("datatable1").remove(id);
+            }
+            else {
+                webix.error("Error");
+            }
 
+        });
+        return false;
+    }
+
+    if(!editWin.isVisible()){
+        $$("editWin").show();
+    }
 
 }
+var editWin =  webix.ui({
+    view: "window",
+    id: "editWin",
+    head: "Edit product",
+    position: "center",
+
+    on: {
+        "onShow": function () {
+            $$("form1").bind("datatable1");
+        }
+    },
+    body: {
+        view: "form", id: "form1", scroll: false,
+        elements: [
+            {view: "text", name: "CODE", label: "Code"},
+            {view: "text", name: "NAME", label: "Name"},
+            {view: "text", name: "PRICE", label: "Price"},
+            {view: "text", name: "CATEGORY", label: "Category"},
+            {view: "button", value: "Cancel", click: '$$("editWin").hide()'},
+            {view: "button", value: "Save", click: saveHandler}
+        ]
+    }
+
+});
+var addProductWin = webix.ui({
+    view: "window",
+    id: "addProduct",
+    head: "Add new product",
+    position: "center",
+    width:500,
+    type:"space",
+    body: {
+        rows: [
+            {
+                cols: [
+                    {
+                        view: "form", id: "form3", scroll: false,
+                        elements: [
+
+                            {view: "text",      name:  "CODE",     label: "Code"},
+                            {view: "text",      name:  "CATEGORY", label: "Category"},
+                            {view: "text",      name:  "NAME",     label: "Name"},
+                            {view: "text",      name:  "PRICE",    label: "Price"},
+                            {view: "text",      name:  "QUANTITY", label: "Quantity"},
+                            {view: "checkbox",  name:  "STATUS",   label: "Published", value:1},
+                            {
+                                view:"uploader", upload:"http://localhost:8080/products",
+                                id:"files", name:"files",
+                                value:"Add image",
+                                link:"doclist",
+                                accept: "image/png, image/gif, image/jpg",
+                                autosend:false
+
+                            },
+                            {
+                                view:"list", scroll:false, id:"doclist",
+                                type:"uploader", autoheight:true, borderless:true
+                            }
+                        ]
+                    }
+
+                ]
+            },
+
+
+            {view: "button", value: "Cancel", click: '$$("addProduct").hide()'},
+            {view: "button", value: "Save", click: saveProduct}
+        ]
+    }
+
+});
+var userInfoWin = webix.ui({
+    view: "window",
+    id: "userInfo",
+    head: "Account settings",
+    position: "center",
+
+    body: {
+        view: "form", id: "form2", scroll: false,
+        elements: [
+            {view: "text", name: "name", label: "Name"},
+            {view: "text", name: "surname", label: "Surname"},
+            {view: "text", name: "phone", label: "Phone"},
+            {view: "text", name: "email", label: "Email"},
+            {view: "button", value: "Cancel", click: '$$("userInfo").hide()'},
+            {view: "button", value: "Save", click: saveUserInfo}
+        ]
+    }
+});
