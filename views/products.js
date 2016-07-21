@@ -71,7 +71,7 @@ define([
 
 });
 function saveHandler() {
-    debugger;
+
     var formValues = $$('form1').getValues();
     webix.ajax().headers({
         "Content-type":"application/json"

@@ -38,6 +38,9 @@ define([
                                 if(text!=null)
                                     $$('orderDetalization').parse(text);
                             });
+                        },
+                        "onItemDblCLick": function(id, e, trg){
+                            editOrder.show();
                         }
 
                     }
@@ -73,3 +76,37 @@ define([
     };
 
 });
+
+var editOrder = webix.ui({
+    view: "window",
+    id: "orderInfo",
+    head: "Edit Order Info",
+    position: "center",
+
+    body: {
+        view: "form", id: "formEditOrder", scroll: false,
+        elements: [
+            {view: "text", name: "number", label: "Number"},
+            {view: "text", name: "date", label: "Date"},
+            {view: "text", name: "status", label: "Status"},
+
+            {view: "button", value: "Cancel", click: '$$("orderInfo").hide()'},
+            {view: "button", value: "Save", click: saveOrderInfo}
+        ]
+    }
+});
+
+function saveOrderInfo(){
+    var formValues = $$('formEditOrder').getValues();
+    webix.ajax().headers({
+        "Content-type":"application/json"
+    }).put("http://localhost:8080/orderdetal",JSON.stringify(formValues),{
+        success:function(){
+            $$("formEditOrder").save();
+            $$("editWin").hide();
+        },
+        error:function(){
+            webix.message("Error");
+        }
+    });
+}
