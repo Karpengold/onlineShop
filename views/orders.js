@@ -17,7 +17,7 @@ define([],function(order){
 
     };
     var grid = {
-        view: "datatable", id: "orders",  select: true, editable:true, pager:"pagerA",
+        view: "datatable", id: "orders",  select: true, editable:true, pager:"pagerA", autowidth:true,
         columns: [
             {id:"index",   header:"",           sort:"int"},
             {id: "salesperson", header: ["Salesperson", {content: "serverFilter"}], width: 220, sort:"server"},
@@ -65,7 +65,7 @@ define([],function(order){
     };
     var pager = {
         id:"pagerA", view:"pager",
-        template:"{common.prev()} {common.pages()} {common.next()}",
+        template:"{common.pages()}",
         size: 3,
         group: 5
     };

@@ -13,7 +13,7 @@ define([
                 {id: "PRICE", header: "Price", width: 220, sort:"string"},
                 {id: "QUANTITY", header: "Quantity", width: 220, sort:"string"},
                 {id: "STATUS", header: "Status", width: 200, sort:"string"},
-                {id: "IMAGE", header: "Image", width: 200, template:"<img src='temp/#CODE#.png'/>"},
+                {id: "IMAGE", editor:"color",header: "Image", width: 200, template:"<img src='temp/#CODE#.png'/>"},
                 {id: "DELETE", header: "", width: 50,  template:"<span class='webix_icon fa-trash-o'></span>"}
             ],
             editable: true,
@@ -52,12 +52,6 @@ define([
             select: true
     };
 
-    var toolbar = { view:"toolbar", id:"tools", height:40, elements:[
-
-        { view:"icon", icon:"user", click: userInfo},
-        { view:"icon", icon:"mail", click: addProduct}
-
-    ]};
 
     var pager = {
         id:"pagerA", view:"pager",
@@ -65,9 +59,24 @@ define([
         size: 1,
         group: 5
     };
+    var refreshButton = {
+        view: "button",
+        value: "Refresh data",
+        width:100,
+        click: refreshTable
+    };
+
+    var addButton = {
+        view: "button",
+        value: "Add item",
+        width:100,
+        click: addProduct
+    };
+
     var ui = {
         rows: [
-            toolbar,
+            refreshButton,
+            addButton,
             table,
             pager
         ]
@@ -98,31 +107,8 @@ function saveHandler() {
         }
     });
 }
-function userInfo(){
-    if(!userInfoWin.isVisible()){
-        userInfoWin.show();
-    }
-    else {
-        userInfoWin.hide();
-    }
-}
-function saveUserInfo() {
-    var formValues = $$("form2").getValues();
-
-    $$("tools").addView({
-        view:"label",
-        label: formValues.name,
-        width: 100
-    });
-    $$("tools").addView({
-        view:"label",
-        label: formValues.surname,
-        width: 100
-
-    });
 
 
-}
 function addProduct() {
     if(!addProductWin.isVisible()){
         addProductWin.show();
@@ -134,6 +120,8 @@ function addProduct() {
 function saveProduct(){
 
     var formValues = $$("form3").getValues();
+
+
     $$('files').send(function(response){
         if(response) {
             $$("datatable1").add(formValues);
@@ -146,7 +134,11 @@ function saveProduct(){
         formValues
     );
 }
-
+function refreshTable(){
+    var table = $$("datatable1");
+    table.clearAll();
+    table.load("http://localhost:8080/products");
+}
 function singleClickEdit(id){
     if (id.column == "DELETE") {
         var code = $$('datatable1').getItem(id).CODE;
@@ -224,7 +216,8 @@ var addProductWin = webix.ui({
                             {
                                 view:"list", scroll:false, id:"doclist",
                                 type:"uploader", autoheight:true, borderless:true
-                            }
+                            },
+                            { view:"colorpicker", label:"Color", name:"color", value:"#ffaadd" }
                         ]
                     }
 
@@ -237,22 +230,4 @@ var addProductWin = webix.ui({
         ]
     }
 
-});
-var userInfoWin = webix.ui({
-    view: "window",
-    id: "userInfo",
-    head: "Account settings",
-    position: "center",
-
-    body: {
-        view: "form", id: "form2", scroll: false,
-        elements: [
-            {view: "text", name: "name", label: "Name"},
-            {view: "text", name: "surname", label: "Surname"},
-            {view: "text", name: "phone", label: "Phone"},
-            {view: "text", name: "email", label: "Email"},
-            {view: "button", value: "Cancel", click: '$$("userInfo").hide()'},
-            {view: "button", value: "Save", click: saveUserInfo}
-        ]
-    }
 });

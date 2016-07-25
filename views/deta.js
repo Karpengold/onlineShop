@@ -22,7 +22,7 @@ define([
     var information = {
             rows: [
                 {
-                    view: "datatable", id: "ors", select: true,
+                    view: "datatable", id: "ors", select: true, autowidth:true,
                     columns: [
                         {id: "number", header: "Number", width: 100},
                         {id: "date", header: "Date", width: 100},
@@ -30,7 +30,7 @@ define([
                     ],
                     on: {
                         "onItemClick": function(id, e, trg){
-                            debugger;
+
 
                             var number = $$('ors').getItem(id).number;
                             webix.ajax().get("http://localhost:8080/getorder?" + number, null, function (text, xml, xhr) {
@@ -47,7 +47,7 @@ define([
 
                 },
                 {
-                    view: "datatable", id: "orderDetalization", select: true,
+                    view: "datatable", id: "orderDetalization", select: true,autowidth:true,
                     columns: [
                         {id:"number",   header:"Number",           sort:"int"},
                         {id: "salesperson", header: "Salesperson",  width: 100},

@@ -22,10 +22,13 @@ define([
             { type:"clean", css:"app-left-panel",
                 padding:10, margin:20, borderless:true, rows: [ header, menu ]},
             { rows:[ { height:10},
+
+                { view:"button", id:"user", type:"icon", icon:"user", label:"User", width:80, click:userInfo },
                 { type:"clean", css:"app-right-panel", padding:4, rows:[
                     { $subview:true }
                 ]}
             ]}
+
         ]
     };
 
@@ -34,3 +37,35 @@ define([
         $menu: "top:menu"
     };
 });
+function userInfo(){
+    if(!userInfoWin.isVisible()){
+        userInfoWin.show();
+    }
+    else {
+        userInfoWin.hide();
+    }
+}
+var userInfoWin = webix.ui({
+    view: "window",
+    id: "userInfo",
+    head: "Account settings",
+    position: "center",
+
+    body: {
+        view: "form", id: "form2", scroll: false,
+        elements: [
+            {view: "text", name: "name", label: "Name"},
+            {view: "text", name: "surname", label: "Surname"},
+            {view: "text", name: "phone", label: "Phone"},
+            {view: "text", name: "email", label: "Email"},
+            {view: "button", value: "Cancel", click: '$$("userInfo").hide()'},
+            {view: "button", value: "Save", click: saveUserInfo}
+        ]
+    }
+});
+function saveUserInfo() {
+    var formValues = $$("form2").getValues();
+    $$("user").define("label", formValues.name + " " + formValues.surname);
+    $$("user").refresh();
+    $$("userInfo").hide();
+}
