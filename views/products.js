@@ -18,23 +18,28 @@ define([
             ],
             editable: true,
             autowidth: true,
+            pager:"pagerA",
+
             on: {
                 "onItemClick": function (id, e, trg) {
-                    clicks++;
+                    var clicks = 0,
+                        timeout;
 
-                    setTimeout(function(){
+                    return function (e) {
 
-                        if(clicks == 2){
-                            //doubleClickEdit();
-                            alert("doubleClickEdit");
+                        clicks++;
 
+                        if (clicks == 1) {
+                            timeout = setTimeout(function () {
+                               singleClickEdit(id);
+                                clicks = 0;
+                            }, 250);
+                        } else {
+                            clearTimeout(timeout);
+                            alert("double");
+                            clicks = 0;
                         }
-                        if(clicks == 1){
-                            singleClickEdit(id);
-                        }
-
-                        clicks = 0;
-                    },400);
+                    };
 
 
                 },
@@ -54,10 +59,17 @@ define([
 
     ]};
 
+    var pager = {
+        id:"pagerA", view:"pager",
+        template:"{common.prev()} {common.pages()} {common.next()}",
+        size: 1,
+        group: 5
+    };
     var ui = {
         rows: [
             toolbar,
-            table
+            table,
+            pager
         ]
     };
 
@@ -70,6 +82,7 @@ define([
 
 
 });
+
 function saveHandler() {
 
     var formValues = $$('form1').getValues();
@@ -145,7 +158,6 @@ function singleClickEdit(id){
             else {
                 webix.error("Error");
             }
-
         });
         return false;
     }
