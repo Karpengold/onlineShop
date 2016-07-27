@@ -13,7 +13,7 @@ define([
                 {id: "PRICE", editor:"popup",header: "Price", width: 220, sort:"string"},
                 {id: "QUANTITY", editor:"popup",header: "Quantity", width: 220, sort:"string"},
                 {id: "STATUS",editor:"popup", header: "Status", width: 200, sort:"string"},
-                {id: "IMAGE", editor:"color",header: "Image", width: 200},
+                {id: "IMAGE",header: "Image", width: 200},
                 {id: "DELETE", header: "", width: 50,  template:"<span class='webix_icon fa-trash-o'></span>"}
             ],
             editable: true,
@@ -32,7 +32,7 @@ define([
                     doubleClickEdit(id);
                 },
                 "onAfterEditStop": function (state, editor, ignoreUpdate) {
-                    debugger;
+
                     if(state.value != state.old) {
                         webix.ajax().headers({
                             "Content-type": "application/json"
@@ -88,7 +88,7 @@ define([
         $ui: ui,
         $oninit:function(view){
             $$('datatable1').parse(records.data);
-
+            $$("form1").bind("datatable1");
         }
     };
 
@@ -147,10 +147,7 @@ function saveProduct(){
                     grid = $$("datatable1");
                     formValues.IMAGE = "<span style='background-color:" + formValues.COLOR + "; border-radius:4px; padding-right:10px;'>&nbsp</span>";
                     grid.add(formValues);
-                    //var record = grid.getItem();
-                    //record["CODE"] = "<span style='background-color:"+color+"; border-radius:10px; padding-right:10px;'>&nbsp</span>";
-                    //
-                    //grid.updateItem(row_id, record);
+
                     $$("form3").clear();
                     $$('addProduct').hide();
                 }
@@ -192,11 +189,7 @@ var editWin =  webix.ui({
     head: "Edit product",
     position: "center",
 
-    on: {
-        "onShow": function () {
-            $$("form1").bind("datatable1");
-        }
-    },
+
     body: {
         view: "form", id: "form1", scroll: false,
         elements: [

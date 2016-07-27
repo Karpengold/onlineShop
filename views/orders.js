@@ -78,10 +78,10 @@ define([],function(order){
         ]
     };
     return {
-        $ui: ui
-        //$oninit:function(view){
-        //    $$('orders').parse(order.data);
-        //}
+        $ui: ui,
+        $oninit:function(view){
+            $$("editOrder").bind("orders");
+        }
     };
 
 });
@@ -105,11 +105,7 @@ var editOrderWin = webix.ui({
     head: "Edit order",
     position: "center",
 
-    on: {
-        "onShow": function () {
-            $$("editOrder").bind("orders");
-        }
-    },
+
     body: {
         view: "form", id: "editOrder", scroll: false,
         elements: [

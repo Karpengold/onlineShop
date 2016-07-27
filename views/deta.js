@@ -71,6 +71,7 @@ define([
         $ui: ui,
         $oninit:function(view){
             $$('categories').parse(deta.data);
+            $$('formEditOrder').bind($$('ors')); //ors - orders
         }
     };
 
