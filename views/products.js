@@ -1,53 +1,52 @@
 define([
     "models/records"
 ],function(records){
-    var clicks =0;
+
 
     var table = {
             view: "datatable", id: "datatable1",
             columns: [
                 {id:"index",   header:"",           sort:"int"},
-                {id: "CODE", header: ["Code", {content: "textFilter"}], width: 220, sort:"string"},
-                {id: "NAME", header: ["Name", {content: "textFilter"}], width: 220, sort:"string"},
-                {id: "CATEGORY", header: ["Category", {content: "textFilter"}], width: 220, sort:"string"},
-                {id: "PRICE", header: "Price", width: 220, sort:"string"},
-                {id: "QUANTITY", header: "Quantity", width: 220, sort:"string"},
-                {id: "STATUS", header: "Status", width: 200, sort:"string"},
-                {id: "IMAGE", editor:"color",header: "Image", width: 200, template:"<img src='temp/#CODE#.png'/>"},
+                {id: "CODE", editor:"popup", header: ["Code", {content: "textFilter"}], width: 220, sort:"string"},
+                {id: "NAME", editor:"popup",header: ["Name", {content: "textFilter"}], width: 220, sort:"string"},
+                {id: "CATEGORY",editor:"popup", header: ["Category", {content:"selectFilter"}], width: 220, sort:"string"},
+                {id: "PRICE", editor:"popup",header: "Price", width: 220, sort:"string"},
+                {id: "QUANTITY", editor:"popup",header: "Quantity", width: 220, sort:"string"},
+                {id: "STATUS",editor:"popup", header: "Status", width: 200, sort:"string"},
+                {id: "IMAGE", editor:"color",header: "Image", width: 200},
                 {id: "DELETE", header: "", width: 50,  template:"<span class='webix_icon fa-trash-o'></span>"}
             ],
             editable: true,
+
+            editaction: "click",
             autowidth: true,
             pager:"pagerA",
 
             on: {
-                "onItemClick": function (id, e, trg) {
-                    var clicks = 0,
-                        timeout;
-
-                    return function (e) {
-
-                        clicks++;
-
-                        if (clicks == 1) {
-                            timeout = setTimeout(function () {
-                               singleClickEdit(id);
-                                clicks = 0;
-                            }, 250);
-                        } else {
-                            clearTimeout(timeout);
-                            alert("double");
-                            clicks = 0;
-                        }
-                    };
-
-
-                },
                 "data->onStoreUpdated":function(){
                     this.data.each(function(obj, i){
                         obj.index = i+1;
                     })
+                },
+                "onItemDblClick":function(id, e, node){
+                    doubleClickEdit(id);
+                },
+                "onAfterEditStop": function (state, editor, ignoreUpdate) {
+                    debugger;
+                    if(state.value != state.old) {
+                        webix.ajax().headers({
+                            "Content-type": "application/json"
+                        }).put("http://localhost:8080/products", JSON.stringify($$('datatable1').getItem(editor.row)), {
+                            success: function () {
+                                webix.message("Ok")
+                            },
+                            error: function () {
+                                webix.message("Error");
+                            }
+                        });
+                    }
                 }
+
             },
             select: true
     };
@@ -56,8 +55,9 @@ define([
     var pager = {
         id:"pagerA", view:"pager",
         template:"{common.prev()} {common.pages()} {common.next()}",
-        size: 1,
-        group: 5
+        size: 10,
+        count:2,
+        group:5
     };
     var refreshButton = {
         view: "button",
@@ -75,8 +75,10 @@ define([
 
     var ui = {
         rows: [
-            refreshButton,
-            addButton,
+            {cols:[
+                refreshButton,
+                addButton
+            ]},
             table,
             pager
         ]
@@ -86,6 +88,7 @@ define([
         $ui: ui,
         $oninit:function(view){
             $$('datatable1').parse(records.data);
+
         }
     };
 
@@ -118,28 +121,52 @@ function addProduct() {
     }
 }
 function saveProduct(){
-
+    debugger;
     var formValues = $$("form3").getValues();
 
-
-    $$('files').send(function(response){
-        if(response) {
-            $$("datatable1").add(formValues);
-            $$('addProduct').close();
-        }
-        else {
-            webix.message("Error")
-        }
-    },
-        formValues
-    );
+    if($$('doclist').count() != 0 ) {
+        $$('files').send(function (response) {
+                if (response) {
+                    $$("datatable1").add(formValues);
+                    $$('addProduct').close();
+                }
+                else {
+                    webix.message("Error");
+                }
+            },
+            formValues
+        );
+    }
+    else {
+        webix.ajax().post(
+            "http://localhost:8080/products", //saving form
+            formValues,
+            function(text){  //responce
+                debugger;
+                if(text) {
+                    grid = $$("datatable1");
+                    formValues.IMAGE = "<span style='background-color:" + formValues.COLOR + "; border-radius:4px; padding-right:10px;'>&nbsp</span>";
+                    grid.add(formValues);
+                    //var record = grid.getItem();
+                    //record["CODE"] = "<span style='background-color:"+color+"; border-radius:10px; padding-right:10px;'>&nbsp</span>";
+                    //
+                    //grid.updateItem(row_id, record);
+                    $$("form3").clear();
+                    $$('addProduct').hide();
+                }
+                else {
+                    webix.message("Server side error");
+                }
+            }
+        );
+    }
 }
 function refreshTable(){
     var table = $$("datatable1");
     table.clearAll();
     table.load("http://localhost:8080/products");
 }
-function singleClickEdit(id){
+function doubleClickEdit(id){
     if (id.column == "DELETE") {
         var code = $$('datatable1').getItem(id).CODE;
         webix.ajax().del("http://localhost:8080/products?" + code, null, function (text, xml, xhr) {
@@ -148,7 +175,7 @@ function singleClickEdit(id){
                 $$("datatable1").remove(id);
             }
             else {
-                webix.error("Error");
+                webix.message("Error");
             }
         });
         return false;
@@ -206,6 +233,12 @@ var addProductWin = webix.ui({
                             {view: "checkbox",  name:  "STATUS",   label: "Published", value:1},
                             {
                                 view:"uploader", upload:"http://localhost:8080/products",
+                                on:{
+                                    "onAfterFileAdd": function() {
+                                        $$('files').hide();
+                                        $$('colorPicker').hide();
+                                    }
+                                },
                                 id:"files", name:"files",
                                 value:"Add image",
                                 link:"doclist",
@@ -217,7 +250,7 @@ var addProductWin = webix.ui({
                                 view:"list", scroll:false, id:"doclist",
                                 type:"uploader", autoheight:true, borderless:true
                             },
-                            { view:"colorpicker", label:"Color", name:"color", value:"#ffaadd" }
+                            { view:"colorpicker",id:"colorPicker", label:"Color", name:"COLOR", value:"#ffaadd" }
                         ]
                     }
 

@@ -55,8 +55,7 @@ define([
                         {id: "status", header: "Status of order", width: 100 },
                         {id: "fee", header: "Fee", width: 100},
                         {id: "shipping", header: "Shipping", width: 100},
-                        {id: "date", header: "Date of order", width: 100},
-                        {id: "image", header: "Image", width: 100}
+                        {id: "date", header: "Date of order", width: 100}
                     ]
                 }
             ]
@@ -98,9 +97,7 @@ var editOrder = webix.ui({
 
 function saveOrderInfo(){
     var formValues = $$('formEditOrder').getValues();
-    webix.ajax().headers({
-        "Content-type":"application/json"
-    }).put("http://localhost:8080/orderdetal",JSON.stringify(formValues),{
+    webix.ajax().put("http://localhost:8080/orderdetal",formValues,{
         success:function(){
             $$("formEditOrder").save();
             $$("editWin").hide();

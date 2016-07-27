@@ -17,20 +17,21 @@ define([],function(order){
 
     };
     var grid = {
-        view: "datatable", id: "orders",  select: true, editable:true, pager:"pagerA", autowidth:true,
+        view: "datatable", id: "orders",  select: true, editable:true, pager:"pagerA", autowidth:true,navigation:true,
         columns: [
-            {id:"index",   header:"",           sort:"int"},
+            {id:"id",   header:"",           sort:"int"},
             {id: "salesperson", header: ["Salesperson", {content: "serverFilter"}], width: 220, sort:"server"},
             {id: "customer", header: ["Customer", {content: "serverFilter"}], width: 220, sort:"server"},
-            {id: "status", header: "Status of order", width: 220, sort:"string"},
-            {id: "fee", header: "Fee", width: 220, sort:"string"},
-            {id: "shipping", header: "Date of order", width: 220, sort:"string"},
-            {id: "date", header: "Date of order", width: 220, sort:"string"},
-            {id: "image", header: "Image", width: 220, sort:"string"},
+            {id: "status", header: "Status of order", width: 220, sort:"server"},
+            {id: "fee", header: "Fee", width: 220, sort:"server"},
+            {id: "shipping", header: "Date of order", width: 220, sort:"server"},
+            {id: "date", header: "Date of order", width: 220, sort:"server"},
+            {id: "image", header: "Image", width: 220, template:"<img src='temp/#image#.png'/>"},
             {id: "delete", header: "", width: 50, template:"<span class='webix_icon fa-trash-o'></span>"}
 
         ],
         url:"http://localhost:8080/orders",
+        datafetch:10,
         on: {
             "onItemClick": function(id, e, trg) {
                 if (id.column == "delete") {
@@ -57,17 +58,17 @@ define([],function(order){
 
             },
             "data->onStoreUpdated":function(id,obj,operation){
-                this.data.each(function(obj, i){
-                    obj.index = i+1;
-                })
+                //this.data.each(function(obj, i){
+                //    obj.index = i+1;
+                //})
             }
         }
     };
     var pager = {
         id:"pagerA", view:"pager",
-        template:"{common.pages()}",
-        size: 3,
-        group: 5
+        template:"{common.prev()} {common.pages()} {common.next()}",
+        size:5,
+        group:5
     };
     var ui = {
         rows: [
@@ -120,7 +121,7 @@ var editOrderWin = webix.ui({
             {view: "text", name: "shipping", label: "Shipping"},
             {view: "button", value: "Cancel", click: '$$("orderWin").hide()'},
             {view: "button", value: "Save", click: saveOrder}
-        ],
+        ]
 
     }
 });
