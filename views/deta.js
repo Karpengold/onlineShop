@@ -1,5 +1,5 @@
 define([
-    "models/deta"
+    "models/detalization"
 ],function(deta){
 
     var categories = {
@@ -9,11 +9,7 @@ define([
         ],
         on: {
             "onItemClick": function(id, e, trg){
-                var cat = $$('categories').getItem(id).category;
-                webix.ajax().get("http://localhost:8080/orderdetal?" + cat, null, function (text, xml, xhr) {
-                        $$('ors').clearAll();
-                        $$('ors').parse(text);
-                });
+                deta.orderByCategory(id);
             }
         },
         autowidth: true,
@@ -30,14 +26,7 @@ define([
                     ],
                     on: {
                         "onItemClick": function(id, e, trg){
-
-
-                            var number = $$('ors').getItem(id).number;
-                            webix.ajax().get("http://localhost:8080/getorder?" + number, null, function (text, xml, xhr) {
-                                $$('orderDetalization').clearAll();
-                                if(text!=null)
-                                    $$('orderDetalization').parse(text);
-                            });
+                            deta.getOrder(id,e,trg);
                         },
                         "onItemDblCLick": function(id, e, trg){
                             editOrder.show();
@@ -49,13 +38,13 @@ define([
                 {
                     view: "datatable", id: "orderDetalization", select: true,autowidth:true,
                     columns: [
-                        {id:"number",   header:"Number",           sort:"int"},
-                        {id: "salesperson", header: "Salesperson",  width: 100},
+                        {id:"id",   header:"Number",           sort:"int"},
+                        {id: "salesperson", header: "Saler",  width: 100},
                         {id: "customer", header: "Customer",  width: 100},
-                        {id: "status", header: "Status of order", width: 100 },
+                        {id: "status", header: "Status", width: 100 },
                         {id: "fee", header: "Fee", width: 100},
                         {id: "shipping", header: "Shipping", width: 100},
-                        {id: "date", header: "Date of order", width: 100}
+                        {id: "date", header: "Date", width: 100}
                     ]
                 }
             ]
@@ -71,12 +60,13 @@ define([
         $ui: ui,
         $oninit:function(view){
             $$('categories').parse(deta.data);
-            $$('formEditOrder').bind($$('ors')); //ors - orders
+            $$('formEditOrder').bind($$('ors'));
+            modelDetalization = deta;
         }
     };
 
 });
-
+var modelDetalization;
 var editOrder = webix.ui({
     view: "window",
     id: "orderInfo",
@@ -91,20 +81,8 @@ var editOrder = webix.ui({
             {view: "text", name: "status", label: "Status"},
 
             {view: "button", value: "Cancel", click: '$$("orderInfo").hide()'},
-            {view: "button", value: "Save", click: saveOrderInfo}
+            {view: "button", value: "Save", click: function(){modelDetalization.saveOrderInfo()}}
         ]
     }
 });
 
-function saveOrderInfo(){
-    var formValues = $$('formEditOrder').getValues();
-    webix.ajax().put("http://localhost:8080/orderdetal",formValues,{
-        success:function(){
-            $$("formEditOrder").save();
-            $$("editWin").hide();
-        },
-        error:function(){
-            webix.message("Error");
-        }
-    });
-}

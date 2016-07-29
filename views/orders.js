@@ -1,4 +1,4 @@
-define([],function(order){
+define(["models/order"],function(order){
     var tools = {
 
         view: "form",
@@ -10,8 +10,7 @@ define([],function(order){
         },
         {
             view: "button", label: "All Fields", width: 95, click:function(){
-            webix.toExcel($$("orders"));
-        }
+                                    webix.toExcel($$("orders"));}
         }
     ]
 
@@ -34,20 +33,7 @@ define([],function(order){
         datafetch:10,
         on: {
             "onItemClick": function(id, e, trg) {
-                if (id.column == "delete") {
-                    var salesperson = $$('orders').getItem(id).salesperson;
-                    webix.ajax().del("http://localhost:8080/orders?" + salesperson , null, function (text, xml, xhr) {
-                        if(text) {
-                            webix.message("Delete row: " + id);
-                            $$("orders").remove(id);
-                            console.log(text);
-                        }
-                        else {
-                            webix.error("Error");
-                        }
-                    });
-                    return false;
-                }
+                modelOrders.deleteOrder(id);
             },
             "onItemDblClick": function () {
                 if (!editOrderWin.isVisible())
@@ -56,11 +42,6 @@ define([],function(order){
                     editOrderWin.hide();
                 }
 
-            },
-            "data->onStoreUpdated":function(id,obj,operation){
-                //this.data.each(function(obj, i){
-                //    obj.index = i+1;
-                //})
             }
         }
     };
@@ -80,32 +61,20 @@ define([],function(order){
     return {
         $ui: ui,
         $oninit:function(view){
+
             $$("editOrder").bind("orders");
+            modelOrders = order;
         }
     };
 
 });
 
-function saveOrder() {
-    var formValues = $$('editOrder').getValues();
-    webix.ajax().headers({
-        "Content-type":"application/json"
-    }).put("http://localhost:8080/orders",JSON.stringify(formValues), function(response){
-        if(response.server) {
-            $$("editOrder").save();
-            $$("orderWin").hide();
-        }
-        else
-            webix.error("Error");
-    });
-}
+var modelOrders;
 var editOrderWin = webix.ui({
     view: "window",
     id: "orderWin",
     head: "Edit order",
     position: "center",
-
-
     body: {
         view: "form", id: "editOrder", scroll: false,
         elements: [
@@ -116,8 +85,8 @@ var editOrderWin = webix.ui({
             {view: "text", name: "date", label: "Date"},
             {view: "text", name: "shipping", label: "Shipping"},
             {view: "button", value: "Cancel", click: '$$("orderWin").hide()'},
-            {view: "button", value: "Save", click: saveOrder}
+            {view: "button", value: "Save", click: function(){modelOrders.saveOrder()}}
         ]
-
     }
 });
+

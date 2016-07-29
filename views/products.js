@@ -7,13 +7,13 @@ define([
             view: "datatable", id: "datatable1",
             columns: [
                 {id:"index",   header:"",           sort:"int"},
-                {id: "CODE", editor:"popup", header: ["Code", {content: "textFilter"}], width: 220, sort:"string"},
-                {id: "NAME", editor:"popup",header: ["Name", {content: "textFilter"}], width: 220, sort:"string"},
-                {id: "CATEGORY",editor:"popup", header: ["Category", {content:"selectFilter"}], width: 220, sort:"string"},
-                {id: "PRICE", editor:"popup",header: "Price", width: 220, sort:"string"},
-                {id: "QUANTITY", editor:"popup",header: "Quantity", width: 220, sort:"string"},
+                {id: "CODE", editor:"popup", header: ["Code", {content: "textFilter"}], width: 250, sort:"string"},
+                {id: "NAME", editor:"popup",header: ["Name", {content: "textFilter"}], width: 250, sort:"string"},
+                {id: "CATEGORY",editor:"popup", header: ["Category", {content:"selectFilter"}], width: 250, sort:"string"},
+                {id: "PRICE", editor:"popup",header: "Price", width: 250, sort:"string"},
+                {id: "QUANTITY", editor:"popup",header: "Quantity", width: 250, sort:"string"},
                 {id: "STATUS",editor:"popup", header: "Status", width: 200, sort:"string"},
-                {id: "IMAGE",header: "Image", width: 200},
+                {id: "IMAGE",header: "", width: 50},
                 {id: "DELETE", header: "", width: 50,  template:"<span class='webix_icon fa-trash-o'></span>"}
             ],
             editable: true,
@@ -28,23 +28,12 @@ define([
                         obj.index = i+1;
                     })
                 },
+
                 "onItemDblClick":function(id, e, node){
-                    doubleClickEdit(id);
+                    modelRecords.doubleClickEdit(id);
                 },
                 "onAfterEditStop": function (state, editor, ignoreUpdate) {
-
-                    if(state.value != state.old) {
-                        webix.ajax().headers({
-                            "Content-type": "application/json"
-                        }).put("http://localhost:8080/products", JSON.stringify($$('datatable1').getItem(editor.row)), {
-                            success: function () {
-                                webix.message("Ok")
-                            },
-                            error: function () {
-                                webix.message("Error");
-                            }
-                        });
-                    }
+                    modelRecords.popupEdit(state,editor);
                 }
 
             },
@@ -61,9 +50,9 @@ define([
     };
     var refreshButton = {
         view: "button",
-        value: "Refresh data",
+        value: "Refresh",
         width:100,
-        click: refreshTable
+        click: function(){modelRecords.refreshTable()}
     };
 
     var addButton = {
@@ -87,30 +76,16 @@ define([
     return {
         $ui: ui,
         $oninit:function(view){
-            $$('datatable1').parse(records.data);
-            $$("form1").bind("datatable1");
+            var grid = $$('datatable1');
+            grid.parse(records.data);
+            $$("form1").bind(grid);
+            modelRecords = records;
         }
     };
 
 
 });
-
-function saveHandler() {
-
-    var formValues = $$('form1').getValues();
-    webix.ajax().headers({
-        "Content-type":"application/json"
-    }).put("http://localhost:8080/products",JSON.stringify(formValues),{
-        success:function(){
-            $$("form1").save();
-            $$("editWin").close();
-        },
-        error:function(){
-            webix.message("Error");
-        }
-    });
-}
-
+var modelRecords;
 
 function addProduct() {
     if(!addProductWin.isVisible()){
@@ -123,66 +98,15 @@ function addProduct() {
 function saveProduct(){
     debugger;
     var formValues = $$("form3").getValues();
-
     if($$('doclist').count() != 0 ) {
-        $$('files').send(function (response) {
-                if (response) {
-                    $$("datatable1").add(formValues);
-                    $$('addProduct').close();
-                }
-                else {
-                    webix.message("Error");
-                }
-            },
-            formValues
-        );
+        modelRecords.addProductWithFile(formValues);
     }
     else {
-        webix.ajax().post(
-            "http://localhost:8080/products", //saving form
-            formValues,
-            function(text){  //responce
-                debugger;
-                if(text) {
-                    grid = $$("datatable1");
-                    formValues.IMAGE = "<span style='background-color:" + formValues.COLOR + "; border-radius:4px; padding-right:10px;'>&nbsp</span>";
-                    grid.add(formValues);
-
-                    $$("form3").clear();
-                    $$('addProduct').hide();
-                }
-                else {
-                    webix.message("Server side error");
-                }
-            }
-        );
+        modelRecords.addProductWithColor(formValues);
     }
 }
-function refreshTable(){
-    var table = $$("datatable1");
-    table.clearAll();
-    table.load("http://localhost:8080/products");
-}
-function doubleClickEdit(id){
-    if (id.column == "DELETE") {
-        var code = $$('datatable1').getItem(id).CODE;
-        webix.ajax().del("http://localhost:8080/products?" + code, null, function (text, xml, xhr) {
-            if(text) {
-                webix.message("Delete row: " + id);
-                $$("datatable1").remove(id);
-            }
-            else {
-                webix.message("Error");
-            }
-        });
-        return false;
-    }
 
-    if(!editWin.isVisible()){
-        $$("editWin").show();
-    }
 
-}
 var editWin =  webix.ui({
     view: "window",
     id: "editWin",
@@ -198,7 +122,7 @@ var editWin =  webix.ui({
             {view: "text", name: "PRICE", label: "Price"},
             {view: "text", name: "CATEGORY", label: "Category"},
             {view: "button", value: "Cancel", click: '$$("editWin").hide()'},
-            {view: "button", value: "Save", click: saveHandler}
+            {view: "button", value: "Save", click:function(){ modelRecords.save()}}
         ]
     }
 
